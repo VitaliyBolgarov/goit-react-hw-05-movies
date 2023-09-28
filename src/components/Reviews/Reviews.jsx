@@ -1,45 +1,33 @@
-import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchReviews } from '../..//Servises/Api';
-import { Title, SecondaryMovieTitle } from '../../Styles/style';
-import { ReviewsItem, ReviewsList, ReviewText } from './ReviewsStyled';
-import { Loader } from '../Loader/Loader';
+import { useState, useEffect } from 'react';
+import { fetchReview } from 'Api/fetchApi';
+import { ReviewsError } from './Reviews.styled';
 
-export default function Reviews() {
+export const Reviews = () => {
+  const { movieId } = useParams();
   const [reviews, setReviews] = useState([]);
-  const { moviesId } = useParams();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        await fetchReviews(moviesId).then(data => setReviews(data.results));
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [moviesId]);
+    fetchReview(Number(movieId)).then(({ results }) => setReviews(results));
+  }, [movieId]);
 
-  const showNoReviews = !loading && reviews.length === 0;
+  if (reviews < 1) {
+    return <ReviewsError>Sorry, we don't have any reviews!</ReviewsError>;
+  }
 
   return (
-    <>
-      {loading && <Loader />}
-      {showNoReviews && <Title>No reviews for this movie</Title>}
-      <ReviewsList>
-        {!error &&
-          reviews.map(review => (
-            <ReviewsItem key={review.id}>
-              <SecondaryMovieTitle>{review.author} :</SecondaryMovieTitle>
-              <ReviewText>{review.content}</ReviewText>
-            </ReviewsItem>
-          ))}
-      </ReviewsList>
-    </>
+    <div>
+      {reviews.map(review => (
+        <div key={review.id}>
+          <p>
+            <b>Author:</b> {review.author}
+          </p>
+          <p>
+            <b>Content:</b> {review.content}
+          </p>
+          <hr />
+        </div>
+      ))}
+    </div>
   );
-}
+};
